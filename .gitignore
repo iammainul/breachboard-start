@@ -1,0 +1,10 @@
+# Cloned application source (./start.sh)
+/app/
+
+# Secrets written beside the clone
+.env
+.env.*
+!.env.example
+
+# Local Docker CLI config used when Docker Desktop's credsStore blocks Hub pulls
+/.docker-cli/
