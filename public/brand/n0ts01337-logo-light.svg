@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 64" fill="none" role="img" aria-labelledby="n0-logo-light-title">
+  <title id="n0-logo-light-title">N0TS01337 lockup on toxic phosphor day</title>
+  <rect width="420" height="64" fill="#F0F8F4"/>
+  <g transform="translate(8 8)">
+    <rect x="1" y="1" width="46" height="46" rx="2" stroke="#008833" stroke-width="2"/>
+    <path d="M7 6v6M7 6h6M41 6v6M41 6h-6M7 42v-6M7 42h6M41 42v-6M41 42h-6" stroke="#77AA00" stroke-width="1.5" stroke-linecap="square"/>
+    <path d="M12 10v28M36 10v28" stroke="#008833" stroke-width="2.5" stroke-linecap="square"/>
+    <text x="24" y="34" text-anchor="middle" fill="#008833" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="16" font-weight="600">N0</text>
+    <path d="M18 36L30 14" stroke="#77AA00" stroke-width="1.75"/>
+  </g>
+  <text x="72" y="30" fill="#0B0F0D" font-family="Space Grotesk, Segoe UI, sans-serif" font-size="22" font-weight="700" letter-spacing="-0.03em">N0TS01337</text>
+  <text x="72" y="50" fill="#008833" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="11" letter-spacing="0.16em">[N0] TOXIC PHOSPHOR DAY</text>
+</svg>

@@ -1,0 +1,16 @@
+---
+description: Illustrated operator guide screenshots and copy
+globs: docs/guide/**
+alwaysApply: false
+---
+
+# Illustrated operator guide
+
+Product screenshots ship in `docs/guide/images/`. Local dumps stay in `evidence/` (gitignored).
+
+When editing `docs/guide/`:
+
+- Follow `docs/guide/IMAGE-GUIDELINES.md` (Pitch Obsidian, 1440×900 PNG, `NN-kebab-slug.png`, alt names the screen and action).
+- Do not commit passwords, API keys, or IRP/CCMP body text.
+- Recapture into the same filename so `docs/guide/README.md` links stay valid.
+- Reject spinners, 404s, and empty error toasts.

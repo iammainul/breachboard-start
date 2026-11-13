@@ -1,0 +1,828 @@
+@import "tailwindcss";
+@import "../design/tokens.css";
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-muted: var(--muted);
+  --color-meta: var(--meta);
+  --color-card: var(--card);
+  --color-sidebar: var(--sidebar);
+  --color-hover: var(--hover);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-signal: var(--signal);
+  --color-surface: var(--surface);
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-fg);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-wash: var(--primary-wash);
+  --font-display: var(--font-display-app), var(--font-display);
+  --color-success: var(--success);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-sans), var(--font-body);
+  --font-mono: var(--font-mono-app), var(--font-mono);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+@layer base {
+  html,
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans), var(--font-body);
+    min-height: 100%;
+  }
+
+  .font-display,
+  h1,
+  h2 {
+    font-family: var(--font-display-app), var(--font-display), var(--font-sans), sans-serif;
+  }
+
+  body {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  ::selection {
+    background: var(--primary-wash);
+  }
+
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+}
+
+/* Everything below lives in the `components` layer on purpose: Tailwind's
+   utilities layer is ordered after it, so a `bg-*`/`border-*`/`sticky` utility
+   written next to a glass class still wins. Unlayered rules would silently
+   beat those utilities instead. */
+@layer components {
+
+.app-canvas {
+  min-height: 100%;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 12% -10%, var(--canvas-glow, transparent), transparent 55%),
+    radial-gradient(ellipse 70% 45% at 88% 0%, var(--canvas-glow-2, transparent), transparent 50%),
+    radial-gradient(ellipse 60% 40% at 50% 110%, var(--canvas-glow, transparent), transparent 55%),
+    radial-gradient(circle at 1px 1px, var(--canvas-dot, transparent) 1px, transparent 0);
+  background-size: auto, auto, auto, 28px 28px;
+}
+
+/* Liquid glass surfaces — same layout, frosted panels.
+   Avoid isolation:isolate on this node: it traps backdrop-filter
+   so the mint canvas never shows through. */
+.flash-card {
+  position: relative;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-soft);
+  background: var(--card);
+  box-shadow:
+    inset 0 -1px 0 var(--glass-shade, transparent),
+    var(--shadow-card);
+  backdrop-filter: blur(var(--glass-blur, 16px)) saturate(var(--glass-saturate, 1.3));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 16px))
+    saturate(var(--glass-saturate, 1.3));
+}
+
+/* Gradient rim: bright on the top-left edge, shaded on the bottom-right.
+   Drawn as a masked 1px ring so it follows the radius exactly. */
+.flash-card::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    150deg,
+    var(--glass-rim, transparent) 0%,
+    transparent 36%,
+    transparent 64%,
+    var(--glass-shade, transparent) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  z-index: 0;
+}
+
+/* Cards that are links or buttons pick up the glass lift. */
+a.flash-card,
+.flash-card-interactive {
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+
+a.flash-card:hover,
+.flash-card-interactive:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--primary) 26%, var(--border-soft));
+  box-shadow:
+    inset 0 -1px 0 var(--glass-shade, transparent),
+    var(--shadow-card-lift, var(--shadow-card));
+}
+
+/* Dock / rail cards: fill height and scroll inside, not clip forever */
+.flash-card.glass-dock {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.flash-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Specular sheen: a short highlight along the top edge, not a diagonal wash
+   across the whole panel. Keeps text contrast intact on both themes. */
+.flash-card::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      180deg,
+      var(--glass-sheen, transparent) 0%,
+      transparent 34%
+    ),
+    radial-gradient(
+      ellipse 60% 42% at 8% -6%,
+      var(--glass-specular, transparent),
+      transparent 70%
+    );
+  opacity: 0.55;
+  z-index: 0;
+}
+
+.flash-card[data-run="live"] {
+  border-color: color-mix(in oklab, var(--primary) 34%, var(--border-soft));
+  background: color-mix(in oklab, var(--primary) 8%, var(--card));
+}
+
+.flash-card[data-run="draft"] {
+  border-color: color-mix(in oklab, var(--warn) 32%, var(--border-soft));
+  background: color-mix(in oklab, var(--warn) 8%, var(--card));
+}
+
+.flash-card[data-run="closed"] {
+  border-color: color-mix(in oklab, var(--success) 28%, var(--border-soft));
+  background: color-mix(in oklab, var(--success) 8%, var(--card));
+}
+
+.flash-card[data-run="archived"] {
+  border-color: color-mix(in oklab, var(--muted) 22%, var(--border-soft));
+  background: color-mix(in oklab, var(--muted) 8%, var(--card));
+}
+
+.flash-card > [data-deco] {
+  position: absolute;
+  z-index: 1;
+}
+
+/* Controller hierarchy: chrome stays translucent; reading surfaces stay calm. */
+.glass-chrome {
+  background:
+    linear-gradient(
+      120deg,
+      color-mix(in oklab, var(--primary) 9%, transparent),
+      transparent 46%
+    ),
+    color-mix(in oklab, var(--card) 88%, transparent);
+  border-color: color-mix(in oklab, var(--primary) 18%, var(--border-soft));
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim, transparent),
+    0 14px 42px -22px color-mix(in oklab, var(--primary) 38%, transparent),
+    var(--shadow-card);
+}
+
+.glass-dock {
+  background: color-mix(in oklab, var(--card) 92%, transparent);
+  backdrop-filter: blur(calc(var(--glass-blur, 16px) + 4px))
+    saturate(var(--glass-saturate, 1.3));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 16px) + 4px))
+    saturate(var(--glass-saturate, 1.3));
+}
+
+.glass-reading {
+  background: color-mix(in oklab, var(--card-solid, var(--card)) 88%, transparent);
+  backdrop-filter: blur(8px) saturate(1.08);
+  -webkit-backdrop-filter: blur(8px) saturate(1.08);
+}
+
+.glass-inset {
+  border: 1px solid var(--border-soft);
+  background: color-mix(in oklab, var(--field-bg, var(--bg)) 82%, transparent);
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim, transparent),
+    inset 0 -1px 0 var(--glass-shade, transparent);
+}
+
+/* --- Glass utilities shared across every page --------------------------- */
+
+/* App rail: full-height frosted column with a lit inner edge. */
+.glass-rail {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--glass-sheen) 45%, transparent) 0%,
+      transparent 22%
+    ),
+    var(--sidebar);
+  border-right: 1px solid var(--border-soft);
+  box-shadow:
+    inset -1px 0 0 var(--glass-shade, transparent),
+    18px 0 48px -32px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(calc(var(--glass-blur, 16px) + 8px))
+    saturate(var(--glass-saturate, 1.3));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur, 16px) + 8px))
+    saturate(var(--glass-saturate, 1.3));
+}
+
+/* Closed overlay rail must not keep a backdrop-filter layer (Chromium GPU crash). */
+.glass-rail[inert] {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Sticky page header that floats over scrolling content. */
+.glass-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--bg) 88%, transparent) 0%,
+    color-mix(in oklab, var(--bg) 62%, transparent) 100%
+  );
+  backdrop-filter: blur(18px) saturate(var(--glass-saturate, 1.3));
+  -webkit-backdrop-filter: blur(18px) saturate(var(--glass-saturate, 1.3));
+}
+
+/* Hairline that fades out at both ends, like a lit seam. */
+.glass-header::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--border) 12%,
+    var(--border) 88%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* Rows inside a glass panel: no border, just a wash that lifts on hover. */
+.glass-row {
+  position: relative;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.glass-row:hover {
+  background: color-mix(in oklab, var(--hover) 70%, transparent);
+}
+
+.glass-row[data-active="true"] {
+  background: var(--primary-wash);
+}
+
+/* Small inner tile — metrics, key/value blocks, thumbnails. */
+.glass-tile {
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border-soft);
+  background: color-mix(in oklab, var(--card) 55%, transparent);
+  box-shadow: inset 0 1px 0 var(--glass-rim, transparent);
+  backdrop-filter: blur(10px) saturate(1.15);
+  -webkit-backdrop-filter: blur(10px) saturate(1.15);
+}
+
+/* Org picker menu — fully opaque so rail labels cannot ghost through. */
+.workspace-org-menu {
+  isolation: isolate;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim, transparent),
+    var(--shadow-card);
+}
+
+.workspace-org-menu [role="option"] > button {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.workspace-org-menu [role="option"] > button:hover {
+  background: var(--surface);
+}
+
+.workspace-org-menu [role="option"][aria-selected="true"] > button {
+  background: var(--primary-wash);
+  font-weight: 600;
+}
+
+/* Vertical seam between columns in a glass panel. */
+.glass-divider {
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--border-soft) 18%,
+    var(--border-soft) 82%,
+    transparent
+  );
+}
+
+/* Thin scrollbar so inner scroll areas do not eat horizontal space. */
+.glass-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--fg) 22%, transparent) transparent;
+}
+
+.glass-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.glass-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.glass-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  background-color: color-mix(in oklab, var(--fg) 20%, transparent);
+}
+
+.glass-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in oklab, var(--fg) 32%, transparent);
+}
+
+.status-warning {
+  border-color: color-mix(in oklab, var(--warn) 25%, var(--border-soft));
+  background: color-mix(in oklab, var(--warn) 9%, var(--card));
+  color: var(--warn);
+}
+
+.btn-danger {
+  border: 1px solid color-mix(in oklab, var(--danger) 28%, var(--border));
+  background: color-mix(in oklab, var(--danger) 8%, var(--card));
+  color: var(--danger);
+}
+
+.btn-danger:hover {
+  background: color-mix(in oklab, var(--danger) 14%, var(--card));
+}
+
+.field {
+  width: 100%;
+  height: 44px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border);
+  background: var(--field-bg, var(--bg));
+  padding: 0 14px;
+  font-size: 15px;
+  color: var(--fg);
+  outline: none;
+  backdrop-filter: blur(10px) saturate(1.2);
+  -webkit-backdrop-filter: blur(10px) saturate(1.2);
+  box-shadow: inset 0 1px 0 var(--glass-specular, transparent);
+}
+
+.field:focus {
+  border-color: color-mix(in oklab, var(--primary) 50%, var(--border));
+  box-shadow: 0 0 0 3px var(--ring), inset 0 1px 0 var(--glass-specular, transparent);
+}
+
+textarea.field {
+  height: auto;
+  padding: 12px 14px;
+}
+
+select.field {
+  cursor: pointer;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 3px),
+    calc(100% - 12px) calc(50% - 3px);
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 36px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius-control);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    transform 150ms ease,
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    border-color 150ms ease;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--primary) 92%, white) 0%,
+    var(--primary) 100%
+  );
+  color: var(--primary-fg);
+  box-shadow:
+    0 1px 0 color-mix(in oklab, white 25%, transparent),
+    0 6px 16px -8px color-mix(in oklab, var(--primary) 55%, transparent);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--primary-hover) 88%, white) 0%,
+    var(--primary-hover) 100%
+  );
+}
+
+.btn-ghost {
+  border: 1px solid var(--border-soft);
+  background: color-mix(in oklab, var(--card) 70%, transparent);
+  color: var(--fg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: inset 0 1px 0 var(--glass-specular, transparent);
+}
+
+.btn-ghost:hover {
+  background: var(--hover);
+  border-color: color-mix(in oklab, var(--primary) 25%, var(--border));
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-soft);
+  background: color-mix(in oklab, var(--hover) 80%, transparent);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.chip-on {
+  background: var(--primary-wash);
+  color: var(--primary-hover);
+  border-color: color-mix(in oklab, var(--primary) 22%, transparent);
+}
+
+.join-code-inline {
+  display: inline-block;
+  border-radius: 6px;
+  border: 1px solid color-mix(in oklab, var(--primary) 22%, var(--border-soft));
+  background: color-mix(in oklab, var(--primary) 8%, var(--card));
+  padding: 1px 6px;
+  vertical-align: 1px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(8px) saturate(1.2);
+  -webkit-backdrop-filter: blur(8px) saturate(1.2);
+}
+
+.status-pill[data-status="live"] {
+  background: color-mix(in oklab, var(--primary) 16%, var(--card));
+  color: var(--primary-hover);
+  border-color: color-mix(in oklab, var(--primary) 30%, transparent);
+}
+
+.status-pill[data-status="draft"] {
+  background: color-mix(in oklab, var(--warn) 14%, var(--card));
+  color: var(--warn);
+  border-color: color-mix(in oklab, var(--warn) 32%, transparent);
+}
+
+.status-pill[data-status="closed"] {
+  background: color-mix(in oklab, var(--success) 12%, var(--card));
+  color: var(--success);
+  border-color: color-mix(in oklab, var(--success) 30%, transparent);
+}
+
+.status-pill[data-status="archived"] {
+  background: color-mix(in oklab, var(--muted) 12%, var(--card));
+  color: var(--muted);
+  border-color: var(--border-soft);
+}
+
+.mission-rail {
+  inset-block: 12px;
+  left: 12px;
+  width: 4px;
+  border-radius: 999px;
+}
+
+.mission-pulse {
+  top: 16px;
+  right: 16px;
+}
+
+.engagement-tabs {
+  backdrop-filter: blur(var(--glass-blur, 16px)) saturate(var(--glass-saturate, 1.3));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 16px))
+    saturate(var(--glass-saturate, 1.3));
+}
+
+.engagement-tab {
+  min-height: 44px;
+  border: 1px solid transparent;
+}
+
+.engagement-tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+.engagement-tab[aria-selected="true"][data-tab="active"] {
+  background: var(--primary-wash);
+  color: var(--primary-hover);
+  border-color: color-mix(in oklab, var(--primary) 22%, transparent);
+  box-shadow: inset 0 1px 0 var(--glass-specular, transparent);
+}
+
+.engagement-tab[aria-selected="true"][data-tab="closed"] {
+  background: color-mix(in oklab, var(--success) 12%, var(--card));
+  color: var(--success);
+  border-color: color-mix(in oklab, var(--success) 24%, transparent);
+  box-shadow: inset 0 1px 0 var(--glass-specular, transparent);
+}
+
+.engagement-tab[aria-selected="true"][data-tab="archived"] {
+  background: color-mix(in oklab, var(--muted) 12%, var(--card));
+  color: var(--fg-2);
+  border-color: var(--border-soft);
+  box-shadow: inset 0 1px 0 var(--glass-specular, transparent);
+}
+
+.engagement-tab[aria-selected="true"] .tab-count {
+  color: inherit;
+  opacity: 0.8;
+}
+
+.mission-rail[data-status="live"] {
+  background: var(--primary);
+}
+
+.mission-rail[data-status="draft"] {
+  background: var(--warn);
+}
+
+.mission-rail[data-status="closed"] {
+  background: var(--success);
+}
+
+.mission-rail[data-status="archived"] {
+  background: var(--muted);
+}
+
+.progress-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--hover);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--primary),
+    color-mix(in oklab, var(--primary) 70%, white)
+  );
+  transition: width 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pulse-live {
+  animation: pulse-live 1.8s ease-in-out infinite;
+}
+
+@keyframes pulse-live {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+}
+
+.pulse-bar {
+  animation: pulse-bar 2s ease-in-out infinite;
+}
+
+@keyframes pulse-bar {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.quest-card {
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.mission-card:focus-visible .flash-card {
+  box-shadow: var(--shadow-card), 0 0 0 3px var(--ring);
+}
+
+.join-code-badge {
+  box-shadow:
+    inset 0 1px 0 var(--glass-specular, transparent),
+    0 8px 24px -12px color-mix(in oklab, var(--primary) 35%, transparent);
+  backdrop-filter: blur(12px) saturate(1.3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+}
+
+.canvas-grid {
+  background-image:
+    radial-gradient(circle at 1px 1px, color-mix(in oklab, var(--border) 55%, transparent) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.page-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      125deg,
+      color-mix(in oklab, var(--primary) 16%, transparent) 0%,
+      transparent 48%
+    ),
+    radial-gradient(
+      ellipse 80% 70% at 100% 0%,
+      var(--canvas-glow-2, transparent),
+      transparent 60%
+    );
+  pointer-events: none;
+}
+
+.page-hero-player::before {
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--primary) 20%, transparent) 0%,
+    transparent 60%
+  );
+}
+
+.page-hero-admin::before {
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--fg) 3%, transparent) 0%,
+    color-mix(in oklab, var(--primary) 12%, transparent) 100%
+  );
+}
+
+/* Fallback when backdrop-filter unsupported — keep opaque cards readable */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .flash-card {
+    background: var(--card-solid, var(--card));
+  }
+  .field {
+    background: var(--bg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .progress-fill,
+  .quest-card,
+  a.flash-card,
+  .flash-card-interactive,
+  .glass-rail {
+    transition: none;
+  }
+  a.flash-card:hover,
+  .flash-card-interactive:hover {
+    transform: none;
+  }
+  .pulse-live,
+  .pulse-bar {
+    animation: none;
+  }
+}
+
+}
+
+/* Nested frost on an already-frosted card is invisible and stacks Chromium
+   compositor layers until the live console sad-tabs. Keep blur on the outer
+   card, rail, and header only. */
+.flash-card .glass-tile,
+.flash-card .glass-inset,
+.flash-card .glass-header,
+.flash-card .quest-card,
+.flash-card .score-panel,
+.flash-card .join-code-badge,
+.flash-card .field,
+.flash-card .btn,
+.flash-card .btn-ghost,
+.flash-card .chip {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Phones: keep glass colour and rims, drop backdrop-filter. Headless Chromium
+   (and low-power GPUs) crash the live console when many frosted layers stack
+   at 390px. Cards use --card-solid so copy stays readable. */
+@media (max-width: 639px) {
+  :root,
+  [data-theme] {
+    --glass-blur: 0px;
+    --glass-saturate: 1;
+  }
+
+  .flash-card,
+  .glass-rail,
+  .glass-header,
+  .glass-tile,
+  .glass-dock,
+  .glass-inset,
+  .glass-row,
+  .field,
+  .btn,
+  .quest-card,
+  .join-code-badge,
+  .score-panel,
+  .engagement-tabs,
+  .backdrop-blur-md,
+  .backdrop-blur-sm,
+  [class*="backdrop-blur"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .flash-card {
+    background: var(--card-solid, var(--card));
+  }
+
+  .flash-card::after {
+    content: none;
+  }
+
+  .glass-header {
+    background: var(--bg);
+  }
+}
+/* end @layer components */

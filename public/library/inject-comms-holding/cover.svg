@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" fill="none">
+  <rect width="960" height="540" fill="#0f1410"/>
+  <rect x="48" y="48" width="864" height="444" rx="24" fill="#171c18" stroke="#2a332c"/>
+  <circle cx="120" cy="140" r="28" fill="#5ea00d"/>
+  <text x="168" y="150" font-family="system-ui,sans-serif" font-size="26" font-weight="700" fill="#e8eee6">Holding statement</text>
+  <text x="168" y="186" font-family="system-ui,sans-serif" font-size="15" fill="#8a9686">Inject pack · swap into generated scenarios</text>
+  <rect x="88" y="260" width="200" height="36" rx="12" fill="#5ea00d"/>
+  <text x="118" y="284" font-family="system-ui,sans-serif" font-size="14" font-weight="600" fill="#0a1008">1 inject</text>
+</svg>

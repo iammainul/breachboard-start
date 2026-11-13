@@ -1,0 +1,19 @@
+# Production overlay. Use with:
+#   ./scripts/deploy.sh
+# Local `./run.sh docker` does not load this file, so the laptop stack
+# still publishes Postgres on 5433 with the dev password.
+services:
+  db:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports: !reset []
+
+  app:
+    ports: !override
+      - "127.0.0.1:3080:3000"
+    environment:
+      DATABASE_URL: postgresql://ttx:${POSTGRES_PASSWORD}@db:5432/ttx?connection_limit=20&pool_timeout=10
+      AUTH_URL: ${AUTH_URL:-http://127.0.0.1:3080}
+      ALLOW_DEV_DEFAULTS: "false"
+      SEED_DEMO: "false"
+      BASELINE_DB_PUSH: ${BASELINE_DB_PUSH:-false}

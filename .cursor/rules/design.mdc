@@ -1,0 +1,14 @@
+---
+description: Breachboard visual contract
+alwaysApply: true
+---
+
+# Design
+
+- Product **Breachboard** (tabletop exercises). Mark: rounded square with a B and a blue status dot.
+- Aesthetic: **Toxic Phosphor liquid glass**. Default field **Pitch Obsidian** (`data-theme="dark"`). Daytime counterpart **Toxic Phosphor Day** (`data-theme="light"`).
+- Surface finish is always **elite liquid glass** (`data-finish="glass"`). Do not offer a brutalist terminal finish. Persist `breachboard-theme`.
+- Accent `#00FF66` dark / `#008833` light. Signal `#CCFF00` / `#77AA00`. No purple/indigo AI chrome.
+- Type: Space Grotesk display, IBM Plex Sans body, IBM Plex Mono for ATT&CK IDs, join codes, hashes, IPs, eyebrows, terminal prompts.
+- Layout: 248px glass rail, content max 1680px, 20px section gaps, columns on wide screens. Portable spec: `design/DESIGN.md`.
+- Admin surfaces: dense lists and tables. Player surfaces may stay more gamified.

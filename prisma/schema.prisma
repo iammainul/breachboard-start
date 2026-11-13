@@ -1,0 +1,411 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id             String             @id @default(cuid())
+  name           String
+  slug           String             @unique
+  sector         String             @default("bfsi_in")
+  notes          String             @default("")
+  /// Crisis / business-continuity plan (CMP) upload path under /media/orgs/...
+  /// Denormalized pointer at the active CCMP ClientDocument (null if none / soft-deleted).
+  crisisDocPath  String?
+  crisisDocName  String?
+  /// Incident response / IRC document upload.
+  ircDocPath     String?
+  ircDocName     String?
+  /// Default IRP/CCMP retention in days (FR-DOC-02). Overridable per session or upload.
+  documentRetentionDays Int            @default(14)
+  users          User[]
+  assignments    OrgAssignment[]
+  exercises      Exercise[]
+  exerciseClients ExerciseClient[]
+  sessions       ExerciseSession[]
+  documents      ClientDocument[]
+  documentAudits DocumentAuditEvent[]
+  createdAt      DateTime           @default(now())
+}
+
+model User {
+  id             String              @id @default(cuid())
+  email          String              @unique
+  name           String
+  passwordHash   String?
+  platformRole   String              @default("USER")
+  /// Slice A: Admin alone cannot facilitate; set true for facilitators (may also be ADMIN).
+  canFacilitate  Boolean             @default(false)
+  /// Bumped on each sign-in; JWT must match — kills concurrent sessions for seated players.
+  authEpoch      Int                 @default(0)
+  organizationId String?
+  organization   Organization?       @relation(fields: [organizationId], references: [id])
+  /// Human-readable onboarding hints; resolved against each exercise at launch.
+  preferredRole  String?
+  preferredTeam  String?
+  /// Base32 TOTP secret. Present while 2FA is enabled (and briefly during setup).
+  totpSecret     String?
+  totpEnabled    Boolean            @default(false)
+  assignments    OrgAssignment[]
+  exercises      Exercise[]
+  seats          SessionSeat[]
+  teamMemberships SessionTeamMember[]
+  answers        InjectAnswer[]
+  uploadedDocuments ClientDocument[]  @relation("DocumentUploader")
+  documentAudits DocumentAuditEvent[]
+  createdAt      DateTime            @default(now())
+}
+
+/// Facilitators may be allocated to one or more client orgs.
+/// Admins see every org; facilitators only see assignment rows (plus legacy home org).
+model OrgAssignment {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@unique([userId, organizationId])
+  @@index([userId])
+  @@index([organizationId])
+}
+
+model AttackTactic {
+  id          String            @id
+  name        String
+  shortname   String
+  description String            @db.Text
+  techniques  AttackTechnique[]
+}
+
+model AttackTechnique {
+  id             String                 @id
+  name           String
+  description    String                 @db.Text
+  tacticId       String?
+  tactic         AttackTactic?          @relation(fields: [tacticId], references: [id])
+  isSubtechnique Boolean                @default(false)
+  parentId       String?
+  groups         AttackGroupTechnique[]
+  detections     DetectionPlaybook[]
+}
+
+model AttackGroup {
+  id          String                 @id
+  name        String
+  aliases     String[]
+  description String                 @db.Text
+  techniques  AttackGroupTechnique[]
+}
+
+model AttackGroupTechnique {
+  groupId     String
+  techniqueId String
+  group       AttackGroup     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  technique   AttackTechnique @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, techniqueId])
+}
+
+model CveRecord {
+  id          String    @id
+  description String    @db.Text
+  cvss        Float?
+  kev         Boolean   @default(false)
+  publishedAt DateTime?
+  raw         Json?
+  updatedAt   DateTime  @updatedAt
+}
+
+enum FeedSource {
+  CISA
+  FBI
+  RBI
+  SEBI
+  CERT_IN
+  NVD
+  MANUAL
+  NEWS
+}
+
+model FeedItem {
+  id           String     @id @default(cuid())
+  source       FeedSource
+  /// Outlet name for NEWS items (Krebs, BleepingComputer, NCSC, …).
+  publisher    String?
+  title        String
+  url          String?
+  body         String     @db.Text
+  publishedAt  DateTime?
+  cveIds       String[]
+  groupIds     String[]
+  techniqueIds String[]
+  createdAt    DateTime   @default(now())
+}
+
+model DetectionPlaybook {
+  id          String          @id @default(cuid())
+  techniqueId String
+  technique   AttackTechnique @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
+  name        String
+  logSource   String?
+  alertName   String?
+  d3fendId    String?
+  description String          @db.Text
+}
+
+model Exercise {
+  id             String            @id @default(cuid())
+  title          String
+  durationMin    Int               @default(90)
+  sector         String
+  /// draft | accepted | retired
+  status         String            @default("draft")
+  document       Json
+  /// Shared pack key across draft / accepted / retired versions for one org.
+  lineageKey     String?
+  /// Curated library template (not a live org draft)
+  isTemplate     Boolean           @default(false)
+  templateKey    String?           @unique
+  /// scenario_pack | inject_pack
+  libraryKind    String            @default("scenario_pack")
+  libraryTags    String[]          @default([])
+  coverImagePath String?
+  cloneCount     Int               @default(0)
+  organizationId String?
+  organization   Organization?     @relation(fields: [organizationId], references: [id])
+  clients        ExerciseClient[]
+  authorId       String?
+  author         User?             @relation(fields: [authorId], references: [id])
+  sessions       ExerciseSession[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([isTemplate])
+  @@index([organizationId, lineageKey])
+}
+
+/// Accepted packs may be linked to one or more client orgs.
+model ExerciseClient {
+  exerciseId     String
+  organizationId String
+  exercise       Exercise     @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@id([exerciseId, organizationId])
+  @@index([organizationId])
+}
+
+model AppSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model ExerciseSession {
+  id              String         @id @default(cuid())
+  joinCode        String         @unique
+  status          String         @default("draft")
+  /// draft = rehearsal / QA · engagement = real facilitated run
+  runKind         String         @default("engagement")
+  organizationId  String
+  organization    Organization   @relation(fields: [organizationId], references: [id])
+  exerciseId      String
+  exercise        Exercise       @relation(fields: [exerciseId], references: [id])
+  currentInjectId String?
+  /// idle | discuss | answering | debrief
+  phase           String         @default("idle")
+  /// Server clock start for current inject phase (discuss or answering)
+  currentInjectStartedAt DateTime?
+  /// Per-inject active SessionTeam ids for this run: { [injectId]: string[] }
+  /// Empty / missing inject key ⇒ all teams active (legacy).
+  injectTeamPlan  Json?
+  /// Planned facilitation datetime (set when the run is created or updated).
+  scheduledAt     DateTime?
+  startedAt       DateTime?
+  closedAt        DateTime?
+  /// Frozen after-action report for closed/archived engagements.
+  reportSnapshot  Json?
+  reportGeneratedAt DateTime?
+  /// Optional override of Organization.documentRetentionDays for this run's uploads.
+  documentRetentionDays Int?
+  seats           SessionSeat[]
+  teams           SessionTeam[]
+  answers         InjectAnswer[]
+  roleInvites     SessionRoleInvite[]
+  documents       ClientDocument[]
+  documentAudits  DocumentAuditEvent[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model SessionTeam {
+  id        String              @id @default(cuid())
+  sessionId String
+  session   ExerciseSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  name      String
+  members   SessionTeamMember[]
+  seats     SessionSeat[]
+  createdAt DateTime            @default(now())
+
+  @@unique([sessionId, name])
+  @@index([sessionId])
+}
+
+model SessionTeamMember {
+  id     String      @id @default(cuid())
+  teamId String
+  team   SessionTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId String
+  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([userId])
+}
+
+model SessionSeat {
+  id             String           @id @default(cuid())
+  sessionId      String
+  session        ExerciseSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind           String
+  playbookRoleId String?
+  teamId         String?
+  team           SessionTeam?     @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  /// Updated on each session poll while the client is open — drives online / waiting / left.
+  lastSeenAt     DateTime?
+  createdAt      DateTime         @default(now())
+
+  @@unique([sessionId, userId])
+}
+
+model InjectAnswer {
+  id             String          @id @default(cuid())
+  sessionId      String
+  session        ExerciseSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  injectId       String
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  playbookRoleId String
+  body           String          @db.Text
+  /// Points originally awarded from question max (or AI-adjusted auto score).
+  autoPoints     Int             @default(0)
+  /// Facilitator-facing score (starts as autoPoints; may be overridden).
+  pointsAwarded  Int             @default(0)
+  /// True when auto-score could not run (empty rubric or AI failure).
+  needsReview    Boolean         @default(false)
+  aiNotes        String?         @db.Text
+  overrideComment String?        @db.Text
+  overriddenById String?
+  gradedAt       DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([sessionId, injectId, userId])
+}
+
+/// One-time role claim tokens — joiners cannot self-assign playbook roles.
+model SessionRoleInvite {
+  id              String          @id @default(cuid())
+  sessionId       String
+  session         ExerciseSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  playbookRoleId  String?
+  teamId          String?
+  recipientEmail  String?
+  recipientName   String?
+  /// ALLOCATED | READY | SENT | CLAIMED | REVOKED | EXPIRED
+  status          String          @default("ALLOCATED")
+  /// Legacy short token. New invitations only store a high-entropy token hash.
+  token           String?
+  tokenHash       String?         @unique
+  tokenHint       String?
+  expiresAt       DateTime?
+  sentAt          DateTime?
+  lastSentAt      DateTime?
+  deliveryError   String?
+  createdByUserId String?
+  claimedByUserId String?
+  claimedAt       DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @default(now()) @updatedAt
+
+  @@index([sessionId])
+  @@index([sessionId, status])
+  @@index([recipientEmail])
+}
+
+/// Client IRP / CCMP (and optional OTHER) upload. Org-level when sessionId is null;
+/// engagement-scoped when set. Soft-deleted rows stay restorable until hardDeletedAt.
+/// Named ClientDocument (not SessionDocument) so standing org plans and per-run
+/// uploads share one lifecycle. See docs/decisions/uploads.md.
+model ClientDocument {
+  id               String    @id @default(cuid())
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /// Null = standing org plan (used by every run until closed/replaced).
+  sessionId        String?
+  session          ExerciseSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  uploadedById     String?
+  uploadedBy       User?     @relation("DocumentUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+  /// IRP | CCMP | OTHER
+  kind             String
+  originalName     String
+  mimeType         String
+  byteSize         Int
+  /// Relative key under MEDIA_ROOT (e.g. orgs/{id}/plans/irp-ab12.pdf).
+  storageKey       String
+  contentSha256    String
+  retentionDays    Int       @default(14)
+  /// When set, sweep hard-deletes once now >= retainUntil (typically softDeletedAt + N).
+  retainUntil      DateTime?
+  extractedText    String?   @db.Text
+  /// pending | ok | failed | skipped | scrubbed
+  extractStatus    String    @default("pending")
+  extractError     String?
+  extractPageCount Int?
+  extractTruncated Boolean   @default(false)
+  softDeletedAt    DateTime?
+  softDeleteReason String?
+  hardDeletedAt    DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  audits           DocumentAuditEvent[]
+
+  @@index([organizationId, softDeletedAt])
+  @@index([sessionId, softDeletedAt])
+  @@index([hardDeletedAt, retainUntil])
+  @@index([storageKey])
+}
+
+/// Append-only from the application: create only, never update or delete.
+/// Hard-deleted documents keep audit rows (documentId is SetNull).
+model DocumentAuditEvent {
+  id             String          @id @default(cuid())
+  documentId     String?
+  document       ClientDocument? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  organizationId String
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sessionId      String?
+  session        ExerciseSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  actorId        String?
+  actor          User?           @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  /// UPLOADED | VIEWED | DOWNLOADED | TEXT_EXTRACTED | SOFT_DELETED | RESTORED | HARD_DELETED
+  action         String
+  reason         String?
+  /// Document id and/or storage key at the time of the event.
+  target         String
+  meta           Json?
+  createdAt      DateTime        @default(now())
+
+  @@index([organizationId, createdAt])
+  @@index([documentId, createdAt])
+  @@index([sessionId, createdAt])
+  @@index([action, createdAt])
+}

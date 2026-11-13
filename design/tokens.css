@@ -1,0 +1,96 @@
+/* Breachboard — Toxic Phosphor liquid glass
+   Colour field: data-theme="dark" | "light"
+   Finish is always liquid glass. */
+
+:root,
+[data-theme="dark"] {
+  --bg: #0b0f0d;
+  --surface: #121815;
+  --fg: #f0f8f4;
+  --fg-2: #c5d6cc;
+  --muted: #80988c;
+  --meta: #6a8076;
+  --card: color-mix(in oklab, #151d19 58%, transparent);
+  --card-solid: #141b18;
+  --sidebar: color-mix(in oklab, #0e1311 74%, transparent);
+  --hover: color-mix(in oklab, #1e2823 62%, transparent);
+  --border: color-mix(in oklab, #00ff66 22%, #1f2e26);
+  --border-soft: color-mix(in oklab, #ffffff 11%, #1a2620);
+  --accent: #00ff66;
+  --on-accent: #0b0f0d;
+  --signal: #ccff00;
+  --primary: #00ff66;
+  --primary-fg: #0b0f0d;
+  --primary-hover: #33ff85;
+  --primary-wash: color-mix(in oklab, #00ff66 14%, #0b0f0d);
+  --success: #00ff66;
+  --warn: #ccff00;
+  --danger: #ff3366;
+  --ring: color-mix(in oklab, #00ff66 38%, transparent);
+  --radius: 16px;
+  --radius-control: 12px;
+  --shadow-card:
+    0 22px 48px -24px rgba(0, 0, 0, 0.8),
+    0 2px 8px -4px rgba(0, 0, 0, 0.5);
+  --shadow-card-lift:
+    0 30px 64px -24px rgba(0, 0, 0, 0.85),
+    0 4px 12px -6px rgba(0, 0, 0, 0.55);
+  --font-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --canvas-glow: color-mix(in oklab, #00ff66 18%, transparent);
+  --canvas-glow-2: color-mix(in oklab, #ccff00 11%, transparent);
+  --canvas-dot: color-mix(in oklab, #00ff66 12%, transparent);
+  --glass-blur: 22px;
+  --glass-saturate: 1.5;
+  --glass-specular: color-mix(in oklab, #ffffff 16%, transparent);
+  /* Rim light traces the panel edge; sheen is the top-edge highlight. */
+  --glass-rim: color-mix(in oklab, #ffffff 14%, transparent);
+  --glass-sheen: color-mix(in oklab, #ffffff 10%, transparent);
+  --glass-shade: color-mix(in oklab, #000000 24%, transparent);
+  --field-bg: color-mix(in oklab, #0b0f0d 55%, transparent);
+}
+
+[data-theme="light"] {
+  --bg: #e3ede7;
+  --surface: #ffffff;
+  --fg: #0b0f0d;
+  --fg-2: #1f2e26;
+  --muted: #466153;
+  --meta: #587264;
+  --card: color-mix(in oklab, #ffffff 74%, transparent);
+  --card-solid: #ffffff;
+  --sidebar: color-mix(in oklab, #eef6f1 76%, transparent);
+  --hover: color-mix(in oklab, #d3e5da 62%, transparent);
+  --border: color-mix(in oklab, #008833 24%, #bed6ca);
+  --border-soft: color-mix(in oklab, #ffffff 40%, #b9d2c6);
+  --accent: #008833;
+  --on-accent: #ffffff;
+  --signal: #77aa00;
+  --primary: #008833;
+  --primary-fg: #ffffff;
+  --primary-hover: #006628;
+  --primary-wash: color-mix(in oklab, #008833 12%, #ffffff);
+  --success: #008833;
+  --warn: #77aa00;
+  --danger: #d01140;
+  --ring: color-mix(in oklab, #008833 32%, transparent);
+  --radius: 16px;
+  --radius-control: 12px;
+  --shadow-card:
+    0 16px 36px -18px color-mix(in oklab, #0b2e1e 30%, transparent),
+    0 2px 6px -3px color-mix(in oklab, #0b2e1e 16%, transparent);
+  --shadow-card-lift:
+    0 24px 50px -20px color-mix(in oklab, #0b2e1e 36%, transparent),
+    0 4px 10px -4px color-mix(in oklab, #0b2e1e 20%, transparent);
+  --canvas-glow: color-mix(in oklab, #008833 16%, transparent);
+  --canvas-glow-2: color-mix(in oklab, #77aa00 12%, transparent);
+  --canvas-dot: color-mix(in oklab, #008833 13%, transparent);
+  --glass-blur: 20px;
+  --glass-saturate: 1.4;
+  --glass-specular: color-mix(in oklab, #ffffff 70%, transparent);
+  --glass-rim: color-mix(in oklab, #ffffff 85%, transparent);
+  --glass-sheen: color-mix(in oklab, #ffffff 65%, transparent);
+  --glass-shade: color-mix(in oklab, #0b2e1e 10%, transparent);
+  --field-bg: color-mix(in oklab, #ffffff 66%, transparent);
+}

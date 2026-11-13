@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" fill="none">
+  <rect width="960" height="540" fill="#0f172a"/>
+  <rect x="40" y="40" width="880" height="460" rx="20" fill="#1e293b"/>
+  <rect x="72" y="80" width="520" height="280" rx="12" fill="#0b1220" stroke="#5ea00d" stroke-opacity="0.5"/>
+  <circle cx="120" cy="120" r="8" fill="#dc2626"/>
+  <circle cx="148" cy="120" r="8" fill="#eab308"/>
+  <circle cx="176" cy="120" r="8" fill="#5ea00d"/>
+  <rect x="100" y="160" width="200" height="10" rx="5" fill="#334155"/>
+  <rect x="100" y="190" width="360" height="10" rx="5" fill="#334155"/>
+  <rect x="100" y="220" width="300" height="10" rx="5" fill="#5ea00d" fill-opacity="0.7"/>
+  <rect x="100" y="260" width="140" height="48" rx="10" fill="#5ea00d"/>
+  <text x="72" y="420" font-family="ui-monospace,monospace" font-size="18" fill="#e2e8f0">INJ-01 · RMM package</text>
+  <text x="72" y="452" font-family="system-ui,sans-serif" font-size="13" fill="#94a3b8">Static Stage artifact · generate video from mediaPrompts</text>
+</svg>

@@ -1,0 +1,31 @@
+---
+description: This repo stays private. Only reviewed source and docs may go to the public repository.
+alwaysApply: true
+---
+
+# Public publish boundary
+
+This repository stays private. The public repository is `iammainul/breachboard-start`, branch `main`. Publish only with `scripts/export-public.sh`. That branch is a new root commit. Never push this repository's history.
+
+## Before a file is added
+
+Both must be true:
+
+1. It is source code or documentation (app, components, lib, prisma schema and migrations, scripts, tests, types, public assets, docker, CI, design tokens, `docs/`, `design/`, `.cursor/rules/`).
+2. It contains no embedded data, secrets, engagement details, or identifiers from real work.
+
+## Stays in this repository
+
+Datasets, exports, credentials, logs, customer or assessment records, model artifacts, generated outputs, and private notes. Gitignored files never ship. `.env.example` may ship; `.env` may not.
+
+Paths in `scripts/public-publish.deny` stay here even when they are documents (generated engagement records and assessment records). `scripts/public-publish.needles` and `scripts/public-publish.redact.py` stay here too. They name the identifiers the export removes. Northline Bank and `DEMO01` are the fictional product demo and may ship.
+
+## Publish
+
+```bash
+scripts/export-public.sh /tmp/breachboard-public
+```
+
+Read the script's kept and held-back lists. Commit the export as a new root. Author and committer: **MIKU** `<miku@localhost>`.
+
+That mailbox is local. Do not use `*@users.noreply.github.com`. GitHub treats `<login>@users.noreply.github.com` as the account with that login, so a made-up name is attached to whoever already owns the login. Force-update public `main` only to replace that public history.

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="n0-mark-title">
+  <title id="n0-mark-title">N0TS01337 bracketed terminal reticle</title>
+  <rect x="2" y="2" width="60" height="60" rx="2" stroke="#00FF66" stroke-width="2"/>
+  <path d="M10 8v8M10 8h8M54 8v8M54 8h-8M10 56v-8M10 56h8M54 56v-8M54 56h-8" stroke="#CCFF00" stroke-width="2" stroke-linecap="square"/>
+  <path d="M16 14v36M48 14v36" stroke="#00FF66" stroke-width="3" stroke-linecap="square"/>
+  <text x="32" y="42" text-anchor="middle" fill="#00FF66" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="22" font-weight="600" letter-spacing="0.04em">N0</text>
+  <path d="M24 46L40 18" stroke="#CCFF00" stroke-width="2"/>
+</svg>

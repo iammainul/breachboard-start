@@ -1,0 +1,53 @@
+---
+description: Breachboard TTX platform — architecture, stack, and dev workflow
+alwaysApply: true
+---
+
+# Breachboard
+
+Gamified cyber tabletop exercise (TTX) app for live facilitated runs: scenarios, injects, roles, scoring, and org onboarding.
+
+## Stack
+
+- Next.js 16 App Router (`app/`), React 19, TypeScript
+- Prisma + PostgreSQL (host port **5433** in dev)
+- NextAuth credentials (`lib/auth.ts`, `OPERATOR_EMAIL` / `OPERATOR_PASSWORD`)
+- AI scenario generation via Vercel AI SDK (`lib/ai/`, providers in `lib/ai/providers.ts`)
+- Tailwind v4 + custom design tokens (`design/tokens.css`, `app/globals.css`)
+
+## Run
+
+```bash
+./run.sh          # local dev → http://localhost:3000
+./run.sh docker   # full stack → http://localhost:3080
+```
+
+Env: `.env.local` (dev) or `.env` (docker). Copy from `.env.example`.
+
+## Key paths
+
+| Area | Location |
+|------|----------|
+| Live session UI | `components/session-console.tsx`, `components/game-ui.tsx` |
+| Scenario schema | `lib/schema/exercise.ts` |
+| Session API | `app/api/sessions/[id]/route.ts` |
+| Generate flow | `app/generate/page.tsx`, `lib/ai/generate-scenario.ts` |
+| Access control | `lib/access.ts` — admin vs participant |
+| Score helpers | `lib/game-score.ts` |
+
+## Domain model
+
+- **Exercise** — scenario document (JSON): roles, injects, questions, points, ATT&CK map
+- **ExerciseSession** — one live run with join code, status (`draft` / `live` / `closed`), current inject
+- **SessionSeat** — user seated as MODERATOR, OBSERVER, or PARTICIPANT (+ playbook role)
+- **InjectAnswer** — participant response per inject (unique per user per inject)
+
+## UI conventions
+
+Follow `.cursor/rules/design.mdc`: Pitch Obsidian default, toxic phosphor accent, optional elite liquid glass finish. Mono for join codes, ATT&CK IDs, hashes, and terminal prompts. Gamified copy for participant surfaces; admin surfaces use command/ops language.
+
+## When changing
+
+- Schema changes: update `prisma/schema.prisma`, run `npx prisma migrate dev` (production: `migrate deploy`). See `docs/DEPLOY.md`.
+- New LLM provider: extend `llmProviderSchema` in `lib/schema/exercise.ts` and `lib/ai/providers.ts`
+- Do not commit `.env` / `.env.local` with real secrets

@@ -1,0 +1,73 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ttx
+      POSTGRES_PASSWORD: ttx
+      POSTGRES_DB: ttx
+    ports:
+      - "5433:5432"
+    volumes:
+      - ttx_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ttx -d ttx"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3080:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ttx_media:/data/media
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://ttx:ttx@db:5432/ttx?connection_limit=20&pool_timeout=10
+      AUTH_URL: ${AUTH_URL:-http://localhost:3080}
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in .env (openssl rand -base64 32)}
+      OPERATOR_EMAIL: ${OPERATOR_EMAIL:-operator@local}
+      OPERATOR_PASSWORD: ${OPERATOR_PASSWORD:?Set OPERATOR_PASSWORD in .env}
+      MEDIA_ROOT: /data/media
+      ALLOW_DEV_DEFAULTS: ${ALLOW_DEV_DEFAULTS:-false}
+      SEED_DEMO: ${SEED_DEMO:-false}
+      DOCUMENT_RETENTION_SWEEP_MS: ${DOCUMENT_RETENTION_SWEEP_MS:-3600000}
+      RETENTION_CRON_SECRET: ${RETENTION_CRON_SECRET:-}
+      LLM_PROVIDER: ${LLM_PROVIDER:-openai}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4-5}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_MODEL: ${GITHUB_MODEL:-openai/gpt-4.1}
+      OLLAMA_BASE_URL: ${OLLAMA_DOCKER_BASE_URL:-http://host.docker.internal:11434/v1}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.1}
+      CURSOR_API_KEY: ${CURSOR_API_KEY:-}
+      CURSOR_MODEL: ${CURSOR_MODEL:-composer-2.5}
+      CURSOR_BASE_URL: ${CURSOR_BASE_URL:-}
+      NVD_API_KEY: ${NVD_API_KEY:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health?ready=1').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 90s
+
+volumes:
+  ttx_pg:
+  ttx_media:

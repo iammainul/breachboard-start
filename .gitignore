@@ -1,0 +1,84 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# --- dependencies ---
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# --- build output ---
+/.next/
+/out/
+/build
+/dist
+.turbo/
+.swc/
+*.tsbuildinfo
+next-env.d.ts
+
+# --- env / secrets ---
+.env*
+!.env.example
+*.pem
+*.key
+!public/**/*.key
+
+# --- testing ---
+/coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/tests/e2e/.auth/
+.nyc_output/
+
+# QA POV recordings (regenerate with npm run test:e2e:qa)
+/docs/qa/recordings/*.webm
+/docs/qa/recordings/*.json
+!/docs/qa/recordings/README.md
+
+# Local walkthrough captures — do not commit
+/evidence/
+
+# --- runtime data ---
+/backups/
+# Local Postgres volume when compose is run with a bind mount
+/pgdata/
+/prisma/*.db
+/prisma/*.db-journal
+
+# Generated Stage media (AI image outputs) — regenerate, never commit
+/public/media/generated/
+/public/media/uploads/
+/public/media/orgs/
+/data/media/
+
+# Local Docker CLI config used when Docker Desktop's credsStore blocks Hub pulls
+/.docker-cli/
+
+# --- agent tooling ---
+# Skills are vendored from skills-lock.json; the lockfile is committed, the
+# installed copies are not.
+/.agents/skills/
+/.cursor/skills/
+/.cursor/notes/
+# .cursor/rules/ IS committed — it carries the shared project + design rules.
+
+# --- logs ---
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# --- editors / OS ---
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# --- deploy ---
+.vercel
